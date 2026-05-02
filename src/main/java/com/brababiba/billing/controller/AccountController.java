@@ -4,6 +4,7 @@ import com.brababiba.billing.dto.AccountResponse;
 import com.brababiba.billing.dto.CreateAccountRequest;
 import com.brababiba.billing.model.Account;
 import com.brababiba.billing.service.AccountService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,7 +19,7 @@ public class AccountController {
     }
 
     @PostMapping
-    public AccountResponse create(@RequestBody CreateAccountRequest request) {
+    public AccountResponse create(@RequestBody @Valid CreateAccountRequest request) {
         Account account = service.create(request.getName());
         return new AccountResponse(account.getId().toString(), account.getName(), account.getCreatedAt().toString());
     }
