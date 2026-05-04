@@ -7,6 +7,9 @@ import com.brababiba.billing.service.AccountService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/accounts")
 public class AccountController {
@@ -22,5 +25,25 @@ public class AccountController {
     public AccountResponse create(@RequestBody @Valid CreateAccountRequest request) {
         Account account = service.create(request.getName());
         return new AccountResponse(account.getId().toString(), account.getName(), account.getCreatedAt().toString());
+    }
+
+    @GetMapping
+    public List<AccountResponse> getAll() {
+        return service.getAll().stream()
+                .map(account -> new AccountResponse(
+                        account.getId().toString(),
+                        account.getName(),
+                        account.getCreatedAt().toString()
+                )).toList();
+    }
+
+    @GetMapping("/{id}")
+    public AccountResponse getById(@PathVariable UUID id) {
+        Account account = service.getById(id);
+        return new AccountResponse(
+                account.getId().toString(),
+                account.getName(),
+                account.getCreatedAt().toString()
+        );
     }
 }
