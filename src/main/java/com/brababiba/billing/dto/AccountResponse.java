@@ -1,25 +1,14 @@
 package com.brababiba.billing.dto;
 
-public class AccountResponse {
-    private String id;
-    private String name;
-    private String createdAt;
+import com.brababiba.billing.model.Account;
 
-    public AccountResponse(String id, String name, String createdAt) {
-        this.id = id;
-        this.name = name;
-        this.createdAt = createdAt;
-    }
+public record AccountResponse(String id, String name, String createdAt) {
 
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
+    public static AccountResponse from(Account account) {
+        return new AccountResponse(
+                account.getId().toString(),
+                account.getName(),
+                account.getCreatedAt().toString()
+        );
     }
 }

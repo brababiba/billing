@@ -30,20 +30,13 @@ public class AccountController {
     @GetMapping
     public List<AccountResponse> getAll() {
         return service.getAll().stream()
-                .map(account -> new AccountResponse(
-                        account.getId().toString(),
-                        account.getName(),
-                        account.getCreatedAt().toString()
-                )).toList();
+                .map(AccountResponse::from)
+                .toList();
     }
 
     @GetMapping("/{id}")
     public AccountResponse getById(@PathVariable UUID id) {
         Account account = service.getById(id);
-        return new AccountResponse(
-                account.getId().toString(),
-                account.getName(),
-                account.getCreatedAt().toString()
-        );
+        return AccountResponse.from(account);
     }
 }
