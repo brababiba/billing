@@ -5,6 +5,7 @@ import com.brababiba.billing.model.Account;
 import com.brababiba.billing.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +23,7 @@ public class AccountService {
         Account acc = new Account();
         acc.setId(UUID.randomUUID());
         acc.setName(name);
-        acc.setCreatedAt(LocalDateTime.now());
+        acc.setCreatedAt(Instant.now());
 
         return repository.save(acc);
     }
