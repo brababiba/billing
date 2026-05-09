@@ -34,7 +34,7 @@ public class AccountService {
 
     public Account getById(UUID id) {
         return repository.findById(id)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found: " + id));
     }
 
     public Account update(UUID id, UpdateAccountRequest request) {
