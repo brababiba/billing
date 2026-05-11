@@ -38,18 +38,13 @@ public class AccountService {
     }
 
     public Account update(UUID id, UpdateAccountRequest request) {
-        Account account = findAccount(id);
+        Account account = getById(id);
         account.setName(request.getName());
         return repository.save(account);
     }
 
     public void delete(UUID id) {
-        Account account = findAccount(id);
+        Account account = getById(id);
         repository.delete(account);
-    }
-
-    private Account findAccount(UUID id) {
-        return repository.findById(id).orElseThrow(() ->
-                new AccountNotFoundException("Account not found: " + id));
     }
 }

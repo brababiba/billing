@@ -1,9 +1,11 @@
 package com.brababiba.billing.exception;
 
+import com.brababiba.billing.common.ErrorMessages;
 import com.brababiba.billing.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -35,7 +37,7 @@ public class GlobalExceptionHandler {
                 fieldErrors.put(error.getField(), error.getDefaultMessage())
         );
         return new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(), "Validation failed",
+                HttpStatus.BAD_REQUEST.getReasonPhrase(), ErrorMessages.VALIDATION_FAILED,
                 request.getRequestURI(), fieldErrors);
     }
 
@@ -51,12 +53,25 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+    public ErrorResponse handleTypeMismatch(HttpServletRequest request) {
         return new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "Invalid request parameter",
+                ErrorMessages.INVALID_REQUEST_PARAMETER,
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidJson(HttpServletRequest request) {
+        return new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ErrorMessages.MALFORMED_JSON_REQUEST,
                 request.getRequestURI(),
                 Map.of()
         );

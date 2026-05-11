@@ -1,11 +1,13 @@
 package com.brababiba.billing.controller;
 
+import com.brababiba.billing.common.ErrorMessages;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -21,14 +23,10 @@ public class AccountControllerTest {
 
     @Test
     void createAccountShouldReturnOk() throws Exception {
-        String body = """
-                {
-                    "name": "Igor"
-                }
-                """;
+        String body = createAccountBody("Igor");
         mockMvc.perform(post("/api/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("Igor"))
@@ -37,17 +35,15 @@ public class AccountControllerTest {
 
     @Test
     void createAccountShouldReturnBadRequestWhenNameIsBlank() throws Exception {
-        String body = """
-                {
-                    "name": ""
-                }
-                """;
+
+        String body = createAccountBody("");
+
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.fieldErrors.name").value("Name is required"));
+                .andExpect(jsonPath("$.message").value(ErrorMessages.VALIDATION_FAILED))
+                .andExpect(jsonPath("$.fieldErrors.name").value(ErrorMessages.NAME_REQUIRED));
     }
 
     @Test
@@ -61,14 +57,12 @@ public class AccountControllerTest {
 
     @Test
     void deleteAccountShouldReturn204() throws Exception {
-        String createBody = """
-                {
-                    "name": "toDelete"
-                }
-                """;
+
+        String createBody = createAccountBody("toDelete");
+
         String response = mockMvc.perform(post("/api/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createBody))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody))
                 .andReturn().getResponse().getContentAsString();
         String id = JsonPath.read(response, "$.id");
 
@@ -81,28 +75,14 @@ public class AccountControllerTest {
 
     @Test
     void updateAccountShouldChangeName() throws Exception {
-        String createBody = """
-                {
-                    "name": "OldName"
-                }
-                """;
 
-        String createResponse = mockMvc.perform(post("/api/accounts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createBody))
-                .andReturn().getResponse().getContentAsString();
+        String id = createAccountAndReturnId("OldName");
 
-        String id = JsonPath.read(createResponse, "$.id");
-
-        String updateBody = """
-                {
-                    "name": "NewName"
-                }
-                """;
+        String updateBody = createAccountBody("NewName");
 
         mockMvc.perform(put("/api/accounts/" + id)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateBody))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("NewName"));
 
@@ -114,17 +94,9 @@ public class AccountControllerTest {
     @Test
     void getAllShouldReturnAccountsList() throws Exception {
 
-        String body1 = """
-                {
-                    "name": "User1"
-                }
-                """;
+        String body1 = createAccountBody("User1");
 
-        String body2 = """
-                {
-                    "name": "User2"
-                }
-                """;
+        String body2 = createAccountBody("User2");
 
         mockMvc.perform(post("/api/accounts")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -145,20 +117,7 @@ public class AccountControllerTest {
     @Test
     void getByIdShouldReturnAccountWhenExists() throws Exception {
 
-        String createBody = """
-                {
-                    "name": "FindMe"
-                }
-                """;
-
-        String createResponse = mockMvc.perform(post("/api/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createBody))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        String id = JsonPath.read(createResponse,"$.id");
+        String id = createAccountAndReturnId("FindMe");
 
         mockMvc.perform(get("/api/accounts/" + id))
                 .andExpect(status().isOk())
@@ -168,37 +127,20 @@ public class AccountControllerTest {
     }
 
     @Test
-    void updateShouldReturn400WhenNameIsBlank() throws Exception{
+    void updateShouldReturn400WhenNameIsBlank() throws Exception {
 
-        String createBody = """
-                {
-                    "name": "InitialName"
-                }
-                """;
+        String id = createAccountAndReturnId("InitialName");
 
-        String createResponse = mockMvc.perform(post("/api/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createBody))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        String id = JsonPath.read(createResponse, "$.id");
-
-        String updateBody = """
-                {
-                    "name": ""
-                }
-                """;
+        String updateBody = createAccountBody("");
 
         mockMvc.perform(put("/api/accounts/" + id)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateBody))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateBody))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
-                        .value("Validation failed"))
+                        .value(ErrorMessages.VALIDATION_FAILED))
                 .andExpect(jsonPath("$.fieldErrors.name")
-                        .value("Name is required"));
+                        .value(ErrorMessages.NAME_REQUIRED));
     }
 
     @Test
@@ -206,15 +148,11 @@ public class AccountControllerTest {
 
         String randomId = "11111111-1111-1111-1111-111111111111";
 
-        String updateBody = """
-                {
-                    "name": "NewName"
-                }
-                """;
+        String updateBody = createAccountBody("NewName");
 
         mockMvc.perform(put("/api/accounts/" + randomId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateBody))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateBody))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
                         .value("Account not found: " + randomId));
@@ -235,5 +173,115 @@ public class AccountControllerTest {
     void getByIdShouldReturn400WhenUuidIsInvalid() throws Exception {
         mockMvc.perform(get("/api/accounts/invalid-uuid"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createShouldReturn400WhenNameIsMissing() throws Exception {
+
+        String body = """
+                {
+                }
+                """;
+
+        mockMvc.perform(post("/api/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value(ErrorMessages.VALIDATION_FAILED))
+                .andExpect(jsonPath("$.fieldErrors.name")
+                        .value(ErrorMessages.NAME_REQUIRED));
+    }
+
+    @Test
+    void updateShouldReturn400WhenNameIsMissing() throws Exception {
+
+        String id = createAccountAndReturnId("InitialName");
+
+        String updateBody = """
+                {
+                }
+                """;
+
+        mockMvc.perform(put("/api/accounts/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value(ErrorMessages.VALIDATION_FAILED))
+                .andExpect(jsonPath("$.fieldErrors.name")
+                        .value(ErrorMessages.NAME_REQUIRED));
+    }
+
+    @Test
+    void createShouldReturn400WhenBodyIsEmpty() throws Exception {
+        mockMvc.perform(post("/api/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value(ErrorMessages.MALFORMED_JSON_REQUEST));
+    }
+
+    @Test
+    void createShouldReturn400WhenJsonIsInvalid() throws Exception {
+
+        String invalidJson = """
+                {
+                    "name":
+                }
+                """;
+
+        mockMvc.perform(post("/api/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value(ErrorMessages.MALFORMED_JSON_REQUEST));
+    }
+
+    @Test
+    void updateShouldReturn400WhenUuidIsInvalid() throws Exception {
+
+        String body = createAccountBody("UpdatedName");
+
+        mockMvc.perform(put("/api/accounts/invalid-uuid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value(ErrorMessages.INVALID_REQUEST_PARAMETER));
+    }
+
+    @Test
+    void deleteShouldReturn400WhenUuidIsInvalid() throws Exception {
+
+        mockMvc.perform(delete("/api/accounts/invalid-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value(ErrorMessages.INVALID_REQUEST_PARAMETER));
+    }
+
+    @NonNull
+    private static String createAccountBody(String name) {
+        return """
+                {
+                    "name": "%s"
+                }
+                """.formatted(name);
+    }
+
+    private String createAccountAndReturnId(String name) throws Exception {
+
+        String createResponse = mockMvc.perform(post("/api/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createAccountBody(name)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return JsonPath.read(createResponse, "$.id");
     }
 }
