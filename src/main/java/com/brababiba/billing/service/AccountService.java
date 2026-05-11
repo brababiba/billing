@@ -4,10 +4,11 @@ import com.brababiba.billing.dto.UpdateAccountRequest;
 import com.brababiba.billing.exception.AccountNotFoundException;
 import com.brababiba.billing.model.Account;
 import com.brababiba.billing.repository.AccountRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,8 +29,13 @@ public class AccountService {
         return repository.save(acc);
     }
 
-    public List<Account> getAll() {
-        return repository.findAll();
+    public Page<Account> getAll(String name, Pageable pageable) {
+
+        if (name == null || name.isBlank()) {
+            return repository.findAll(pageable);
+        }
+
+        return repository.findByNameContainingIgnoreCase(name, pageable);
     }
 
     public Account getById(UUID id) {

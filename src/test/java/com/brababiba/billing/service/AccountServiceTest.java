@@ -9,6 +9,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
@@ -159,6 +163,8 @@ public class AccountServiceTest {
     @Test
     void getAllShouldReturnAccounts() {
 
+        Pageable pageable = PageRequest.of(0, 10);
+
         Account account1 = new Account();
         account1.setId(UUID.randomUUID());
         account1.setName("User1");
@@ -169,15 +175,17 @@ public class AccountServiceTest {
         account2.setName("User2");
         account2.setCreatedAt(Instant.now());
 
-        when(repository.findAll())
-                .thenReturn(List.of(account1, account2));
+        Page<Account> page = new PageImpl<>(List.of(account1, account2));
 
-        List<Account> result = service.getAll();
+        when(repository.findAll(pageable))
+                .thenReturn(page);
 
-        assertEquals(2, result.size());
-        assertEquals("User1", result.get(0).getName());
-        assertEquals("User2", result.get(1).getName());
+        Page<Account> result = service.getAll(null, pageable);
 
-        verify(repository).findAll();
+        assertEquals(2, result.getContent().size());
+        assertEquals("User1", result.getContent().get(0).getName());
+        assertEquals("User2", result.getContent().get(1).getName());
+
+        verify(repository).findAll(pageable);
     }
 }

@@ -94,24 +94,36 @@ public class AccountControllerTest {
     @Test
     void getAllShouldReturnAccountsList() throws Exception {
 
-        String body1 = createAccountBody("User1");
+        createAccountAndReturnId("User1");
+        createAccountAndReturnId("User2");
 
-        String body2 = createAccountBody("User2");
-
-        mockMvc.perform(post("/api/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body1));
-
-        mockMvc.perform(post("/api/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body2));
-
-        mockMvc.perform(get("/api/accounts"))
+        mockMvc.perform(get("/api/accounts")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "name,asc"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].id").exists())
-                .andExpect(jsonPath("$[0].name").exists())
-                .andExpect(jsonPath("$[0].createdAt").exists());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].id").exists())
+                .andExpect(jsonPath("$.content[0].name").exists())
+                .andExpect(jsonPath("$.content[0].createdAt").exists())
+                .andExpect(jsonPath("$.totalElements").exists())
+                .andExpect(jsonPath("$.totalPages").exists());
+    }
+
+    @Test
+    void getAllShouldFilterAccountsByName() throws Exception {
+
+        createAccountAndReturnId("Alpha");
+        createAccountAndReturnId("Beta");
+
+        mockMvc.perform(get("/api/accounts")
+                        .param("name", "alp")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "name,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].name").value("Alpha"));
     }
 
     @Test

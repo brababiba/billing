@@ -6,10 +6,11 @@ import com.brababiba.billing.dto.UpdateAccountRequest;
 import com.brababiba.billing.model.Account;
 import com.brababiba.billing.service.AccountService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -30,10 +31,9 @@ public class AccountController {
     }
 
     @GetMapping
-    public List<AccountResponse> getAll() {
-        return service.getAll().stream()
-                .map(AccountResponse::from)
-                .toList();
+    public Page<AccountResponse> getAll(@RequestParam(required = false) String name, Pageable pageable) {
+        return service.getAll(name, pageable)
+                .map(AccountResponse::from);
     }
 
     @GetMapping("/{id}")
