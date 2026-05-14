@@ -7,6 +7,7 @@ import com.brababiba.billing.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,5 +33,16 @@ public class AuthController {
     @GetMapping("/me")
     public String me(Authentication authentication) {
         return authentication.getName();
+    }
+
+    @GetMapping("/authorities")
+    public Object authorities(Authentication authentication) {
+        return authentication.getAuthorities();
+    }
+
+    @GetMapping("/admin-test")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String adminTest() {
+        return "admin ok";
     }
 }

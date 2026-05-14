@@ -10,6 +10,7 @@ public final class ErrorMessages {
     public static final String INVALID_EMAIL = "Invalid email";
     public static final String PASSWORD_REQUIRED = "Password is required";
     public static final String INVALID_EMAIL_OR_PASSWORD = "Invalid email or password";
+    public static final String ACCESS_DENIED = "Access denied";
 
     private ErrorMessages() {
     }

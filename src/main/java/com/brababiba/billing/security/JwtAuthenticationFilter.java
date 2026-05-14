@@ -1,5 +1,7 @@
 package com.brababiba.billing.security;
 
+import com.brababiba.billing.model.User;
+import com.brababiba.billing.repository.UserRepository;
 import com.brababiba.billing.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,18 +10,21 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -45,9 +50,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String email = jwtService.extractEmail(token);
 
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow();
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            email, null, Collections.emptyList()
+                            email, null,
+                            List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
                     );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
