@@ -1,12 +1,12 @@
 package com.brababiba.billing.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -21,7 +21,9 @@ public class User {
 
     private String passwordHash;
 
-    private String role;
-
     private Instant createdAt;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private Set<UserRole> roles = new HashSet<>();
 }

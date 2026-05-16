@@ -53,10 +53,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             User user = userRepository.findByEmail(email)
                     .orElseThrow();
 
+            List<SimpleGrantedAuthority> authorities = user.getRoles()
+                    .stream()
+                    .map(userRole -> new SimpleGrantedAuthority(
+                            "ROLE_" + userRole.getId().getRole()
+                    ))
+                    .toList();
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            email, null,
-                            List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+                            email,
+                            null,
+                            authorities
                     );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);

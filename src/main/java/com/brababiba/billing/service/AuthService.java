@@ -5,7 +5,10 @@ import com.brababiba.billing.dto.auth.AuthResponse;
 import com.brababiba.billing.dto.auth.LoginRequest;
 import com.brababiba.billing.dto.auth.RegisterRequest;
 import com.brababiba.billing.model.User;
+import com.brababiba.billing.model.UserRole;
+import com.brababiba.billing.model.UserRoleId;
 import com.brababiba.billing.repository.UserRepository;
+import com.brababiba.billing.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,8 @@ public class AuthService {
 
     private final UserRepository userRepository;
 
+    private final UserRoleRepository userRoleRepository;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private final JwtService jwtService;
@@ -30,10 +35,16 @@ public class AuthService {
         user.setId(UUID.randomUUID());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole("USER");
         user.setCreatedAt(Instant.now());
-
         userRepository.save(user);
+        UserRoleId roleId = new UserRoleId();
+        roleId.setUserId(user.getId());
+        roleId.setRole("USER");
+
+        UserRole userRole = new UserRole();
+        userRole.setId(roleId);
+
+        userRoleRepository.save(userRole);
     }
 
     public AuthResponse login(LoginRequest request) {
