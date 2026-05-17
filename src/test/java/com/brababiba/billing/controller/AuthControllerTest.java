@@ -7,9 +7,11 @@ import com.brababiba.billing.model.UserRoleId;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -108,5 +110,48 @@ public class AuthControllerTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/auth/admin-test")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void loginWithWrongPasswordShouldReturnUnauthorized() throws Exception {
+
+        String email = "wrong-password-" + System.currentTimeMillis() + "@test.com";
+
+        registerUser(email, "123456");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(buildLoginRequest(email, "wrong-password")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void loginWithUnknownEmailShouldReturnUnauthorized() throws Exception {
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(buildLoginRequest("unknown@test.com", "123456")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void registerWithDuplicateEmailShouldReturnConflict() throws Exception {
+
+        String email = "duplicate-" + System.currentTimeMillis() + "@test.com";
+
+        registerUser(email, "123456");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(buildRegisterRequest(email, "123456")))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void protectedEndpointWithInvalidTokenShouldReturnUnauthorized() throws Exception {
+
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer invalid-token"))
+                .andExpect(status().isUnauthorized());
     }
 }

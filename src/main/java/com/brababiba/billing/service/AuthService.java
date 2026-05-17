@@ -1,9 +1,10 @@
 package com.brababiba.billing.service;
 
-import com.brababiba.billing.common.ErrorMessages;
 import com.brababiba.billing.dto.auth.AuthResponse;
 import com.brababiba.billing.dto.auth.LoginRequest;
 import com.brababiba.billing.dto.auth.RegisterRequest;
+import com.brababiba.billing.exception.EmailAlreadyExistsException;
+import com.brababiba.billing.exception.InvalidCredentialsException;
 import com.brababiba.billing.model.User;
 import com.brababiba.billing.model.UserRole;
 import com.brababiba.billing.model.UserRoleId;
@@ -30,6 +31,10 @@ public class AuthService {
 
     public void register(RegisterRequest request) {
 
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException(request.getEmail());
+        }
+
         User user = new User();
 
         user.setId(UUID.randomUUID());
@@ -49,8 +54,7 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new RuntimeException(ErrorMessages.INVALID_EMAIL_OR_PASSWORD));
+                .orElseThrow(InvalidCredentialsException::new);
 
         boolean passwordMatches = passwordEncoder.matches(
                 request.getPassword(),
@@ -58,7 +62,7 @@ public class AuthService {
         );
 
         if (!passwordMatches) {
-            throw new RuntimeException(ErrorMessages.INVALID_EMAIL_OR_PASSWORD);
+            throw new InvalidCredentialsException();
         }
 
         String token = jwtService.generateToken(user.getEmail());

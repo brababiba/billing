@@ -11,6 +11,7 @@ public final class ErrorMessages {
     public static final String PASSWORD_REQUIRED = "Password is required";
     public static final String INVALID_EMAIL_OR_PASSWORD = "Invalid email or password";
     public static final String ACCESS_DENIED = "Access denied";
+    public static final String EMAIL_EXISTS = "Email already exists: ";
 
     private ErrorMessages() {
     }
