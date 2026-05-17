@@ -1,14 +1,14 @@
 package com.brababiba.billing.controller;
 
+import com.brababiba.billing.AbstractIntegrationTest;
 import com.brababiba.billing.common.ErrorMessages;
 import com.jayway.jsonpath.JsonPath;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -16,17 +16,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class AccountControllerTest {
+public class AccountControllerTest extends AbstractIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    private String token;
+
+    @BeforeEach
+    void setup() throws Exception {
+
+        String email = "login-user-" + System.currentTimeMillis() + "@test.com";
+        String password = "234567";
+
+        registerUser(email, password);
+
+        token = loginAndGetToken(email, password);
+    }
 
     @Test
     void createAccountShouldReturnOk() throws Exception {
         String body = createAccountBody("Igor");
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("Igor"))
@@ -40,7 +51,8 @@ public class AccountControllerTest {
 
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(ErrorMessages.VALIDATION_FAILED))
                 .andExpect(jsonPath("$.fieldErrors.name").value(ErrorMessages.NAME_REQUIRED));
@@ -50,7 +62,8 @@ public class AccountControllerTest {
     void getByIdShouldReturn404WhenAccountDoesNotExist() throws Exception {
         String randomId = "11111111-1111-1111-1111-111111111111";
 
-        mockMvc.perform(get("/api/accounts/" + randomId))
+        mockMvc.perform(get("/api/accounts/" + randomId)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Account not found: " + randomId));
     }
@@ -62,14 +75,17 @@ public class AccountControllerTest {
 
         String response = mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createBody))
+                        .content(createBody)
+                        .header("Authorization", "Bearer " + token))
                 .andReturn().getResponse().getContentAsString();
         String id = JsonPath.read(response, "$.id");
 
-        mockMvc.perform(delete("/api/accounts/" + id))
+        mockMvc.perform(delete("/api/accounts/" + id)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/accounts/" + id))
+        mockMvc.perform(get("/api/accounts/" + id)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
 
@@ -82,11 +98,13 @@ public class AccountControllerTest {
 
         mockMvc.perform(put("/api/accounts/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateBody))
+                        .content(updateBody)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("NewName"));
 
-        mockMvc.perform(get("/api/accounts/" + id))
+        mockMvc.perform(get("/api/accounts/" + id)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("NewName"));
     }
@@ -100,7 +118,8 @@ public class AccountControllerTest {
         mockMvc.perform(get("/api/accounts")
                         .param("page", "0")
                         .param("size", "10")
-                        .param("sort", "name,asc"))
+                        .param("sort", "name,asc")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].id").exists())
@@ -120,7 +139,8 @@ public class AccountControllerTest {
                         .param("name", "alp")
                         .param("page", "0")
                         .param("size", "10")
-                        .param("sort", "name,asc"))
+                        .param("sort", "name,asc")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].name").value("Alpha"));
@@ -131,7 +151,8 @@ public class AccountControllerTest {
 
         String id = createAccountAndReturnId("FindMe");
 
-        mockMvc.perform(get("/api/accounts/" + id))
+        mockMvc.perform(get("/api/accounts/" + id)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.name").value("FindMe"))
@@ -147,7 +168,8 @@ public class AccountControllerTest {
 
         mockMvc.perform(put("/api/accounts/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateBody))
+                        .content(updateBody)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value(ErrorMessages.VALIDATION_FAILED))
@@ -164,7 +186,8 @@ public class AccountControllerTest {
 
         mockMvc.perform(put("/api/accounts/" + randomId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateBody))
+                        .content(updateBody)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
                         .value("Account not found: " + randomId));
@@ -175,7 +198,8 @@ public class AccountControllerTest {
 
         String randomId = "11111111-1111-1111-1111-111111111111";
 
-        mockMvc.perform(delete("/api/accounts/" + randomId))
+        mockMvc.perform(delete("/api/accounts/" + randomId)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
                         .value("Account not found: " + randomId));
@@ -183,7 +207,8 @@ public class AccountControllerTest {
 
     @Test
     void getByIdShouldReturn400WhenUuidIsInvalid() throws Exception {
-        mockMvc.perform(get("/api/accounts/invalid-uuid"))
+        mockMvc.perform(get("/api/accounts/invalid-uuid")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest());
     }
 
@@ -197,7 +222,8 @@ public class AccountControllerTest {
 
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value(ErrorMessages.VALIDATION_FAILED))
@@ -217,7 +243,8 @@ public class AccountControllerTest {
 
         mockMvc.perform(put("/api/accounts/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateBody))
+                        .content(updateBody)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value(ErrorMessages.VALIDATION_FAILED))
@@ -229,7 +256,8 @@ public class AccountControllerTest {
     void createShouldReturn400WhenBodyIsEmpty() throws Exception {
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(""))
+                        .content("")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value(ErrorMessages.MALFORMED_JSON_REQUEST));
@@ -246,7 +274,8 @@ public class AccountControllerTest {
 
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidJson))
+                        .content(invalidJson)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value(ErrorMessages.MALFORMED_JSON_REQUEST));
@@ -259,7 +288,8 @@ public class AccountControllerTest {
 
         mockMvc.perform(put("/api/accounts/invalid-uuid")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(body)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value(ErrorMessages.INVALID_REQUEST_PARAMETER));
@@ -268,7 +298,8 @@ public class AccountControllerTest {
     @Test
     void deleteShouldReturn400WhenUuidIsInvalid() throws Exception {
 
-        mockMvc.perform(delete("/api/accounts/invalid-uuid"))
+        mockMvc.perform(delete("/api/accounts/invalid-uuid")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value(ErrorMessages.INVALID_REQUEST_PARAMETER));
@@ -287,7 +318,8 @@ public class AccountControllerTest {
 
         String createResponse = mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createAccountBody(name)))
+                        .content(createAccountBody(name))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andReturn()
