@@ -31,6 +31,8 @@ External payment systems such as Stripe, PayPal, Paddle, or others may be used l
 - PostgreSQL
 - Flyway
 - Docker Compose
+- OpenAPI / Swagger
+- springdoc-openapi
 - Maven Wrapper
 - JUnit
 - MockMvc
@@ -64,38 +66,130 @@ Current roles:
 
 ## 4. Current Database Model
 
-### users
+## Tenant and Account Model
 
-Represents a real application user.
+### User
 
-Current fields:
+A `User` represents a real human identity inside the system.
 
-- `id`
-- `email`
-- `password_hash`
-- `created_at`
+Users authenticate globally using JWT authentication.
 
-### user_roles
+Global system roles are stored separately in `user_roles`.
 
-Represents global roles assigned to users.
+Examples:
 
-Current fields:
+- USER
+- ADMIN
 
-- `user_id`
-- `role`
-
-One user can have multiple roles.
-
-### accounts
-
-Currently this is still a simple CRUD entity.
-
-Important note:
-
-In the future, `accounts` will likely become a tenant / organization / workspace concept and should be connected to
-users through an `account_members` table.
+These roles are system-wide roles.
 
 ---
+
+### Account
+
+An `Account` represents a tenant, company, workspace, or organization.
+
+Billing entities such as:
+
+- subscriptions
+- invoices
+- usage
+- entitlements
+
+will eventually belong to accounts rather than directly to users.
+
+---
+
+### Account Membership
+
+Users are connected to accounts through `account_members`.
+
+This allows the same user to belong to multiple accounts.
+
+Example:
+
+- Igor → OWNER → Company A
+- Igor → MEMBER → Company B
+
+---
+
+### Account Roles
+
+Account roles are tenant-scoped roles.
+
+Planned account roles:
+
+- OWNER
+- ADMIN
+- MEMBER
+- BILLING_MANAGER
+
+These roles are different from global system roles.
+
+Example:
+
+A user may be:
+
+- global USER
+- account OWNER inside one tenant
+- account MEMBER inside another tenant
+
+---
+
+### Architectural Direction
+
+The platform is moving toward a multi-tenant architecture.
+
+Future authorization decisions will likely depend on:
+
+- authenticated user
+- current account
+- account membership
+- account role
+
+---
+
+### Registration and Account Creation Strategy
+
+The platform follows a hybrid onboarding model.
+
+#### Self-registration
+
+When a user registers normally:
+
+1. a new user is created
+2. a default personal account/workspace is created
+3. the user becomes the OWNER of that account
+
+Goal:
+
+Provide frictionless onboarding and immediately usable workspace experience.
+
+---
+
+#### Invitation-based registration
+
+In the future, users may also join existing accounts through invitation flows.
+
+Planned flow:
+
+1. account OWNER or ADMIN creates invitation
+2. invited user registers or logs in
+3. membership is added to existing account
+
+In invitation-based flows, automatic personal account creation may be skipped.
+
+---
+
+#### Architectural Reasoning
+
+This hybrid model combines:
+
+- simple SaaS onboarding
+- multi-tenant flexibility
+- enterprise-style account membership support
+
+while avoiding unnecessary onboarding friction.
 
 ## 5. Future Domain Model
 
@@ -183,13 +277,19 @@ Represents what an account/user is allowed to do.
 Example API:
 
 ```http
+
 GET /api/entitlements/check?feature=EXPORT_PDF
+```
+
 Possible response:
 
+```json
 {
   "allowed": true,
   "remaining": 120
 }
+```
+
 invoices
 Represents generated invoices or invoice-like internal records.
 
@@ -203,8 +303,8 @@ webhook_events
 Stores external provider webhook events for idempotency and audit.
 
 6. Architectural Principles
-Code is the source of truth
-The project should remain understandable from:
+   Code is the source of truth
+   The project should remain understandable from:
 
 code structure
 package names
@@ -233,9 +333,10 @@ subscriptions
 usage limits
 payments
 webhook idempotency
+
 7. Current Known Architectural Decisions
-JWT is used for authentication
-JWT is currently implemented directly inside the application for learning and MVP purposes.
+   JWT is used for authentication
+   JWT is currently implemented directly inside the application for learning and MVP purposes.
 
 Future option:
 
@@ -262,14 +363,49 @@ Future work:
 
 Introduce tenant/account membership model.
 
-8. Near-Term Roadmap
-Finish security tests.
-Stabilize authentication and authorization.
-Add account_members / tenant model.
-Redesign current accounts entity if needed.
-Introduce plans and features.
-Add subscription model.
-Add entitlement check API.
-Add usage event API.
-Add usage aggregation.
-Add payment provider abstraction.
+## 8. Near-Term Roadmap
+
+### Current Focus
+
+The current focus is transitioning from a generic CRUD backend into a tenant-aware billing and entitlement platform.
+
+### Planned Next Steps
+
+#### 1. Tenant / Account Architecture
+
+Redesign the current `accounts` entity into a tenant/workspace/company model.
+
+Introduce:
+
+- `account_members`
+- account-scoped roles
+- account ownership model
+
+Goal:
+
+Support multi-tenant authorization and future subscription ownership.
+
+#### 2. Operational Improvements
+
+Planned operational improvements:
+
+- improve README
+- improve OpenAPI documentation
+- GitHub Actions CI pipeline
+- test environment improvements
+- possibly Testcontainers later
+
+#### 3. Billing Domain
+
+Planned billing domain entities:
+
+- plans
+- features
+- subscriptions
+- usage events
+- entitlements
+
+#### 4. Long-Term Direction
+
+The project should evolve into a lightweight billing and entitlement backend platform rather than a payment gateway
+itself.

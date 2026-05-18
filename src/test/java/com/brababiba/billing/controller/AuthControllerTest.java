@@ -1,6 +1,7 @@
 package com.brababiba.billing.controller;
 
 import com.brababiba.billing.AbstractIntegrationTest;
+import com.brababiba.billing.model.AccountMemberId;
 import com.brababiba.billing.model.User;
 import com.brababiba.billing.model.UserRole;
 import com.brababiba.billing.model.UserRoleId;
@@ -32,6 +33,24 @@ public class AuthControllerTest extends AbstractIntegrationTest {
         assertEquals(1, user.getRoles().size());
         assertTrue(user.getRoles().stream()
                 .anyMatch(role -> "USER".equals(role.getId().getRole())));
+
+        var accounts = accountRepository.findAll();
+
+        assertFalse(accounts.isEmpty());
+
+        var account = accounts.stream()
+                .filter(a -> a.getName().contains(email.split("@")[0]))
+                .findFirst()
+                .orElseThrow();
+
+        var memberId = new AccountMemberId();
+        memberId.setAccountId(account.getId());
+        memberId.setUserId(user.getId());
+
+        var accountMember = accountMemberRepository.findById(memberId)
+                .orElseThrow();
+
+        assertEquals("OWNER", accountMember.getRole());
     }
 
     @Test

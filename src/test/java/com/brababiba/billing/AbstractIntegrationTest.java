@@ -1,5 +1,7 @@
 package com.brababiba.billing;
 
+import com.brababiba.billing.repository.AccountMemberRepository;
+import com.brababiba.billing.repository.AccountRepository;
 import com.brababiba.billing.repository.UserRepository;
 import com.brababiba.billing.repository.UserRoleRepository;
 import com.jayway.jsonpath.JsonPath;
@@ -21,6 +23,12 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     protected UserRoleRepository userRoleRepository;
+
+    @Autowired
+    protected AccountRepository accountRepository;
+
+    @Autowired
+    protected AccountMemberRepository accountMemberRepository;
 
     protected String loginAndGetToken(String email, String password) throws Exception {
 
