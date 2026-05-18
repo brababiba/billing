@@ -1,13 +1,13 @@
 package com.brababiba.billing.repository;
 
-import com.brababiba.billing.model.Account;
+import com.brababiba.billing.model.Workspace;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface AccountRepository extends JpaRepository<Account, UUID> {
+public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
 
-    Page<Account> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Page<Workspace> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

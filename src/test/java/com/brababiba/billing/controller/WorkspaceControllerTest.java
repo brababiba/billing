@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class AccountControllerTest extends AbstractIntegrationTest {
+public class WorkspaceControllerTest extends AbstractIntegrationTest {
 
     private String token;
 
@@ -32,9 +32,9 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void createAccountShouldReturnOk() throws Exception {
-        String body = createAccountBody("Igor");
-        mockMvc.perform(post("/api/accounts")
+    void createWorkspaceShouldReturnOk() throws Exception {
+        String body = createWorkspaceBody("Igor");
+        mockMvc.perform(post("/api/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body)
                         .header("Authorization", "Bearer " + token))
@@ -45,11 +45,11 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void createAccountShouldReturnBadRequestWhenNameIsBlank() throws Exception {
+    void createWorkspaceShouldReturnBadRequestWhenNameIsBlank() throws Exception {
 
-        String body = createAccountBody("");
+        String body = createWorkspaceBody("");
 
-        mockMvc.perform(post("/api/accounts")
+        mockMvc.perform(post("/api/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body)
                         .header("Authorization", "Bearer " + token))
@@ -59,63 +59,63 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void getByIdShouldReturn404WhenAccountDoesNotExist() throws Exception {
+    void getByIdShouldReturn404WhenWorkspaceDoesNotExist() throws Exception {
         String randomId = "11111111-1111-1111-1111-111111111111";
 
-        mockMvc.perform(get("/api/accounts/" + randomId)
+        mockMvc.perform(get("/api/workspaces/" + randomId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Account not found: " + randomId));
+                .andExpect(jsonPath("$.message").value("Workspace not found: " + randomId));
     }
 
     @Test
-    void deleteAccountShouldReturn204() throws Exception {
+    void deleteWorkspaceShouldReturn204() throws Exception {
 
-        String createBody = createAccountBody("toDelete");
+        String createBody = createWorkspaceBody("toDelete");
 
-        String response = mockMvc.perform(post("/api/accounts")
+        String response = mockMvc.perform(post("/api/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody)
                         .header("Authorization", "Bearer " + token))
                 .andReturn().getResponse().getContentAsString();
         String id = JsonPath.read(response, "$.id");
 
-        mockMvc.perform(delete("/api/accounts/" + id)
+        mockMvc.perform(delete("/api/workspaces/" + id)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/accounts/" + id)
+        mockMvc.perform(get("/api/workspaces/" + id)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void updateAccountShouldChangeName() throws Exception {
+    void updateWorkspacesShouldChangeName() throws Exception {
 
-        String id = createAccountAndReturnId("OldName");
+        String id = createWorkspaceAndReturnId("OldName");
 
-        String updateBody = createAccountBody("NewName");
+        String updateBody = createWorkspaceBody("NewName");
 
-        mockMvc.perform(put("/api/accounts/" + id)
+        mockMvc.perform(put("/api/workspaces/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateBody)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("NewName"));
 
-        mockMvc.perform(get("/api/accounts/" + id)
+        mockMvc.perform(get("/api/workspaces/" + id)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("NewName"));
     }
 
     @Test
-    void getAllShouldReturnAccountsList() throws Exception {
+    void getAllShouldReturnWorkspacesList() throws Exception {
 
-        createAccountAndReturnId("User1");
-        createAccountAndReturnId("User2");
+        createWorkspaceAndReturnId("User1");
+        createWorkspaceAndReturnId("User2");
 
-        mockMvc.perform(get("/api/accounts")
+        mockMvc.perform(get("/api/workspaces")
                         .param("page", "0")
                         .param("size", "10")
                         .param("sort", "name,asc")
@@ -130,12 +130,12 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void getAllShouldFilterAccountsByName() throws Exception {
+    void getAllShouldFilterWorkspacesByName() throws Exception {
 
-        createAccountAndReturnId("Alpha");
-        createAccountAndReturnId("Beta");
+        createWorkspaceAndReturnId("Alpha");
+        createWorkspaceAndReturnId("Beta");
 
-        mockMvc.perform(get("/api/accounts")
+        mockMvc.perform(get("/api/workspaces")
                         .param("name", "alp")
                         .param("page", "0")
                         .param("size", "10")
@@ -147,11 +147,11 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void getByIdShouldReturnAccountWhenExists() throws Exception {
+    void getByIdShouldReturnWorkspaceWhenExists() throws Exception {
 
-        String id = createAccountAndReturnId("FindMe");
+        String id = createWorkspaceAndReturnId("FindMe");
 
-        mockMvc.perform(get("/api/accounts/" + id)
+        mockMvc.perform(get("/api/workspaces/" + id)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
@@ -162,11 +162,11 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     @Test
     void updateShouldReturn400WhenNameIsBlank() throws Exception {
 
-        String id = createAccountAndReturnId("InitialName");
+        String id = createWorkspaceAndReturnId("InitialName");
 
-        String updateBody = createAccountBody("");
+        String updateBody = createWorkspaceBody("");
 
-        mockMvc.perform(put("/api/accounts/" + id)
+        mockMvc.perform(put("/api/workspaces/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateBody)
                         .header("Authorization", "Bearer " + token))
@@ -178,36 +178,36 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void updateShouldReturn404WhenAccountDoesNotExist() throws Exception {
+    void updateShouldReturn404WhenWorkspaceDoesNotExist() throws Exception {
 
         String randomId = "11111111-1111-1111-1111-111111111111";
 
-        String updateBody = createAccountBody("NewName");
+        String updateBody = createWorkspaceBody("NewName");
 
-        mockMvc.perform(put("/api/accounts/" + randomId)
+        mockMvc.perform(put("/api/workspaces/" + randomId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateBody)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
-                        .value("Account not found: " + randomId));
+                        .value("Workspace not found: " + randomId));
     }
 
     @Test
-    void deleteShouldReturn404WhenAccountDoesNotExist() throws Exception {
+    void deleteShouldReturn404WhenWorkspaceDoesNotExist() throws Exception {
 
         String randomId = "11111111-1111-1111-1111-111111111111";
 
-        mockMvc.perform(delete("/api/accounts/" + randomId)
+        mockMvc.perform(delete("/api/workspaces/" + randomId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
-                        .value("Account not found: " + randomId));
+                        .value("Workspace not found: " + randomId));
     }
 
     @Test
     void getByIdShouldReturn400WhenUuidIsInvalid() throws Exception {
-        mockMvc.perform(get("/api/accounts/invalid-uuid")
+        mockMvc.perform(get("/api/workspaces/invalid-uuid")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest());
     }
@@ -220,7 +220,7 @@ public class AccountControllerTest extends AbstractIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/accounts")
+        mockMvc.perform(post("/api/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body)
                         .header("Authorization", "Bearer " + token))
@@ -234,14 +234,14 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     @Test
     void updateShouldReturn400WhenNameIsMissing() throws Exception {
 
-        String id = createAccountAndReturnId("InitialName");
+        String id = createWorkspaceAndReturnId("InitialName");
 
         String updateBody = """
                 {
                 }
                 """;
 
-        mockMvc.perform(put("/api/accounts/" + id)
+        mockMvc.perform(put("/api/workspaces/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateBody)
                         .header("Authorization", "Bearer " + token))
@@ -254,7 +254,7 @@ public class AccountControllerTest extends AbstractIntegrationTest {
 
     @Test
     void createShouldReturn400WhenBodyIsEmpty() throws Exception {
-        mockMvc.perform(post("/api/accounts")
+        mockMvc.perform(post("/api/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("")
                         .header("Authorization", "Bearer " + token))
@@ -272,7 +272,7 @@ public class AccountControllerTest extends AbstractIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/accounts")
+        mockMvc.perform(post("/api/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson)
                         .header("Authorization", "Bearer " + token))
@@ -284,9 +284,9 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     @Test
     void updateShouldReturn400WhenUuidIsInvalid() throws Exception {
 
-        String body = createAccountBody("UpdatedName");
+        String body = createWorkspaceBody("UpdatedName");
 
-        mockMvc.perform(put("/api/accounts/invalid-uuid")
+        mockMvc.perform(put("/api/workspaces/invalid-uuid")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body)
                         .header("Authorization", "Bearer " + token))
@@ -298,7 +298,7 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     @Test
     void deleteShouldReturn400WhenUuidIsInvalid() throws Exception {
 
-        mockMvc.perform(delete("/api/accounts/invalid-uuid")
+        mockMvc.perform(delete("/api/workspaces/invalid-uuid")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
@@ -306,7 +306,7 @@ public class AccountControllerTest extends AbstractIntegrationTest {
     }
 
     @NonNull
-    private static String createAccountBody(String name) {
+    private static String createWorkspaceBody(String name) {
         return """
                 {
                     "name": "%s"
@@ -314,11 +314,11 @@ public class AccountControllerTest extends AbstractIntegrationTest {
                 """.formatted(name);
     }
 
-    private String createAccountAndReturnId(String name) throws Exception {
+    private String createWorkspaceAndReturnId(String name) throws Exception {
 
-        String createResponse = mockMvc.perform(post("/api/accounts")
+        String createResponse = mockMvc.perform(post("/api/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createAccountBody(name))
+                        .content(createWorkspaceBody(name))
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())

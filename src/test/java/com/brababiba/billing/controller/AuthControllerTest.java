@@ -1,10 +1,10 @@
 package com.brababiba.billing.controller;
 
 import com.brababiba.billing.AbstractIntegrationTest;
-import com.brababiba.billing.model.AccountMemberId;
 import com.brababiba.billing.model.User;
 import com.brababiba.billing.model.UserRole;
 import com.brababiba.billing.model.UserRoleId;
+import com.brababiba.billing.model.WorkspaceMemberId;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,23 +34,23 @@ public class AuthControllerTest extends AbstractIntegrationTest {
         assertTrue(user.getRoles().stream()
                 .anyMatch(role -> "USER".equals(role.getId().getRole())));
 
-        var accounts = accountRepository.findAll();
+        var workspaces = workspaceRepository.findAll();
 
-        assertFalse(accounts.isEmpty());
+        assertFalse(workspaces.isEmpty());
 
-        var account = accounts.stream()
+        var workspace = workspaces.stream()
                 .filter(a -> a.getName().contains(email.split("@")[0]))
                 .findFirst()
                 .orElseThrow();
 
-        var memberId = new AccountMemberId();
-        memberId.setAccountId(account.getId());
+        var memberId = new WorkspaceMemberId();
+        memberId.setWorkspaceId(workspace.getId());
         memberId.setUserId(user.getId());
 
-        var accountMember = accountMemberRepository.findById(memberId)
+        var workspaceMember = workspaceMemberRepository.findById(memberId)
                 .orElseThrow();
 
-        assertEquals("OWNER", accountMember.getRole());
+        assertEquals("OWNER", workspaceMember.getRole());
     }
 
     @Test

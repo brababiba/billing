@@ -10,10 +10,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "accounts")
+@Table(name = "workspaces")
 @Getter
 @Setter
-public class Account {
+public class Workspace {
 
     @Id
     private UUID id;

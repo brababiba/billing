@@ -22,9 +22,9 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(AccountNotFoundException.class)
+    @ExceptionHandler(WorkspaceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFound(AccountNotFoundException ex, HttpServletRequest request) {
+    public ErrorResponse handleNotFound(WorkspaceNotFoundException ex, HttpServletRequest request) {
         return new ErrorResponse(LocalDateTime.now(), HttpStatus.NOT_FOUND.value(),
                 HttpStatus.NOT_FOUND.getReasonPhrase(), ex.getMessage(),
                 request.getRequestURI(), Map.of()

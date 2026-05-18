@@ -13,10 +13,10 @@ import java.util.UUID;
 @Setter
 @EqualsAndHashCode
 @Embeddable
-public class AccountMemberId implements Serializable {
+public class WorkspaceMemberId implements Serializable {
 
-    @Column(name = "account_id")
-    private UUID accountId;
+    @Column(name = "workspace_id")
+    private UUID workspaceId;
 
     @Column(name = "user_id")
     private UUID userId;

@@ -117,7 +117,7 @@ Example:
 
 Account roles are tenant-scoped roles.
 
-Planned account roles:
+Planned workspace roles:
 
 - OWNER
 - ADMIN
@@ -131,8 +131,8 @@ Example:
 A user may be:
 
 - global USER
-- account OWNER inside one tenant
-- account MEMBER inside another tenant
+- workspace OWNER inside one tenant
+- workspace MEMBER inside another tenant
 
 ---
 
@@ -143,9 +143,9 @@ The platform is moving toward a multi-tenant architecture.
 Future authorization decisions will likely depend on:
 
 - authenticated user
-- current account
-- account membership
-- account role
+- current workspace
+- workspace membership
+- workspace role
 
 ---
 
@@ -158,8 +158,8 @@ The platform follows a hybrid onboarding model.
 When a user registers normally:
 
 1. a new user is created
-2. a default personal account/workspace is created
-3. the user becomes the OWNER of that account
+2. a default personal workspace/workspace is created
+3. the user becomes the OWNER of that workspace
 
 Goal:
 
@@ -173,11 +173,11 @@ In the future, users may also join existing accounts through invitation flows.
 
 Planned flow:
 
-1. account OWNER or ADMIN creates invitation
+1. workspace OWNER or ADMIN creates invitation
 2. invited user registers or logs in
-3. membership is added to existing account
+3. membership is added to existing workspace
 
-In invitation-based flows, automatic personal account creation may be skipped.
+In invitation-based flows, automatic personal workspace creation may be skipped.
 
 ---
 
@@ -187,7 +187,7 @@ This hybrid model combines:
 
 - simple SaaS onboarding
 - multi-tenant flexibility
-- enterprise-style account membership support
+- enterprise-style workspace membership support
 
 while avoiding unnecessary onboarding friction.
 
@@ -197,7 +197,7 @@ Expected future entities:
 
 ### tenants / accounts
 
-Represents a company, workspace, customer account, or tenant.
+Represents a company, workspace, customer workspace, or tenant.
 
 ### account_members
 
@@ -210,7 +210,7 @@ Possible fields:
 - `role`
 - `created_at`
 
-Example account-level roles:
+Example workspace-level roles:
 
 - `OWNER`
 - `ADMIN`
@@ -245,7 +245,7 @@ Defines which features are included in each plan.
 
 ### subscriptions
 
-Represents active billing state for an account.
+Represents active billing state for an workspace.
 
 Possible statuses:
 
@@ -272,7 +272,7 @@ Stores pre-calculated usage totals per billing period.
 
 ### entitlements
 
-Represents what an account/user is allowed to do.
+Represents what an workspace/user is allowed to do.
 
 Example API:
 
@@ -361,7 +361,7 @@ This is intentional for now.
 
 Future work:
 
-Introduce tenant/account membership model.
+Introduce tenant/workspace membership model.
 
 ## 8. Near-Term Roadmap
 
@@ -378,8 +378,8 @@ Redesign the current `accounts` entity into a tenant/workspace/company model.
 Introduce:
 
 - `account_members`
-- account-scoped roles
-- account ownership model
+- workspace-scoped roles
+- workspace ownership model
 
 Goal:
 

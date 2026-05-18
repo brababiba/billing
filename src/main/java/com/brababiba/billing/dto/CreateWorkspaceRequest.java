@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateAccountRequest {
+public class CreateWorkspaceRequest {
     @NotBlank(message = ErrorMessages.NAME_REQUIRED)
     private String name;
 }

@@ -1,16 +1,16 @@
 package com.brababiba.billing.service;
 
-import com.brababiba.billing.common.AccountRoles;
+import com.brababiba.billing.common.WorkspaceRoles;
 import com.brababiba.billing.dto.auth.AuthResponse;
 import com.brababiba.billing.dto.auth.LoginRequest;
 import com.brababiba.billing.dto.auth.RegisterRequest;
 import com.brababiba.billing.exception.EmailAlreadyExistsException;
 import com.brababiba.billing.exception.InvalidCredentialsException;
 import com.brababiba.billing.model.*;
-import com.brababiba.billing.repository.AccountMemberRepository;
-import com.brababiba.billing.repository.AccountRepository;
 import com.brababiba.billing.repository.UserRepository;
 import com.brababiba.billing.repository.UserRoleRepository;
+import com.brababiba.billing.repository.WorkspaceMemberRepository;
+import com.brababiba.billing.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,9 +27,9 @@ public class AuthService {
 
     private final UserRoleRepository userRoleRepository;
 
-    private final AccountRepository accountRepository;
+    private final WorkspaceRepository workspaceRepository;
 
-    private final AccountMemberRepository accountMemberRepository;
+    private final WorkspaceMemberRepository workspaceMemberRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -49,26 +49,26 @@ public class AuthService {
         user.setCreatedAt(Instant.now());
         userRepository.save(user);
 
-        Account account = new Account();
+        Workspace workspace = new Workspace();
 
         String emailPrefix = request.getEmail().split("@")[0];
-        account.setId(UUID.randomUUID());
-        account.setName(emailPrefix + "'s workspace");
-        account.setCreatedAt(Instant.now());
-        accountRepository.save(account);
+        workspace.setId(UUID.randomUUID());
+        workspace.setName(emailPrefix + "'s workspace");
+        workspace.setCreatedAt(Instant.now());
+        workspaceRepository.save(workspace);
 
-        AccountMemberId memberId = new AccountMemberId();
+        WorkspaceMemberId memberId = new WorkspaceMemberId();
 
-        memberId.setAccountId(account.getId());
+        memberId.setWorkspaceId(workspace.getId());
         memberId.setUserId(user.getId());
 
-        AccountMember accountMember = new AccountMember();
+        WorkspaceMember workspaceMember = new WorkspaceMember();
 
-        accountMember.setId(memberId);
-        accountMember.setRole(AccountRoles.OWNER);
-        accountMember.setCreatedAt(LocalDateTime.now());
+        workspaceMember.setId(memberId);
+        workspaceMember.setRole(WorkspaceRoles.OWNER);
+        workspaceMember.setCreatedAt(LocalDateTime.now());
 
-        accountMemberRepository.save(accountMember);
+        workspaceMemberRepository.save(workspaceMember);
 
         UserRoleId roleId = new UserRoleId();
         roleId.setUserId(user.getId());

@@ -1,9 +1,9 @@
 package com.brababiba.billing.service;
 
-import com.brababiba.billing.dto.UpdateAccountRequest;
-import com.brababiba.billing.exception.AccountNotFoundException;
-import com.brababiba.billing.model.Account;
-import com.brababiba.billing.repository.AccountRepository;
+import com.brababiba.billing.dto.UpdateWorkspaceRequest;
+import com.brababiba.billing.exception.WorkspaceNotFoundException;
+import com.brababiba.billing.model.Workspace;
+import com.brababiba.billing.repository.WorkspaceRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,55 +24,55 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AccountServiceTest {
+public class WorkspaceServiceTest {
 
     @Mock
-    private AccountRepository repository;
+    private WorkspaceRepository repository;
 
     @InjectMocks
-    private AccountService service;
+    private WorkspaceService service;
 
     @Test
-    void createShouldSaveAccount() {
-        when(repository.save(any(Account.class)))
+    void createShouldSaveWorkspace() {
+        when(repository.save(any(Workspace.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Account result = service.create("Igor");
+        Workspace result = service.create("Igor");
 
         assertNotNull(result.getId());
         assertEquals("Igor", result.getName());
         assertNotNull(result.getCreatedAt());
 
-        verify(repository).save(any(Account.class));
+        verify(repository).save(any(Workspace.class));
     }
 
     @Test
-    void getByIdShouldThrowExceptionWhenAccountDoesNotExist() {
+    void getByIdShouldThrowExceptionWhenWorkspaceDoesNotExist() {
 
         UUID id = UUID.randomUUID();
 
         when(repository.findById(id))
                 .thenReturn(Optional.empty());
 
-        assertThrows(AccountNotFoundException.class, () -> service.getById(id));
+        assertThrows(WorkspaceNotFoundException.class, () -> service.getById(id));
 
         verify(repository).findById(id);
     }
 
     @Test
-    void getByIdShouldReturnAccountWhenExists() {
+    void getByIdShouldReturnWorkspaceWhenExists() {
 
         UUID id = UUID.randomUUID();
 
-        Account account = new Account();
-        account.setId(id);
-        account.setName("Igor");
-        account.setCreatedAt(Instant.now());
+        Workspace workspace = new Workspace();
+        workspace.setId(id);
+        workspace.setName("Igor");
+        workspace.setCreatedAt(Instant.now());
 
         when(repository.findById(id))
-                .thenReturn(Optional.of(account));
+                .thenReturn(Optional.of(workspace));
 
-        Account result = service.getById(id);
+        Workspace result = service.getById(id);
 
         assertEquals(id, result.getId());
         assertEquals("Igor", result.getName());
@@ -82,14 +82,14 @@ public class AccountServiceTest {
     }
 
     @Test
-    void updateShouldChangeAccountName() {
+    void updateShouldChangeWorkspaceName() {
 
         UUID id = UUID.randomUUID();
 
-        UpdateAccountRequest request = new UpdateAccountRequest();
+        UpdateWorkspaceRequest request = new UpdateWorkspaceRequest();
         request.setName("NewName");
 
-        Account existingAcount = new Account();
+        Workspace existingAcount = new Workspace();
         existingAcount.setId(id);
         existingAcount.setName("OldName");
         existingAcount.setCreatedAt(Instant.now());
@@ -97,10 +97,10 @@ public class AccountServiceTest {
         when(repository.findById(id))
                 .thenReturn(Optional.of(existingAcount));
 
-        when(repository.save(any(Account.class)))
+        when(repository.save(any(Workspace.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Account result = service.update(id, request);
+        Workspace result = service.update(id, request);
 
         assertEquals(id, result.getId());
         assertEquals("NewName", result.getName());
@@ -111,76 +111,76 @@ public class AccountServiceTest {
     }
 
     @Test
-    void updateShouldThrowExceptionWhenAccountDoesNotExist() {
+    void updateShouldThrowExceptionWhenWorkspaceDoesNotExist() {
 
         UUID id = UUID.randomUUID();
 
-        UpdateAccountRequest request = new UpdateAccountRequest();
+        UpdateWorkspaceRequest request = new UpdateWorkspaceRequest();
         request.setName("NewName");
 
         when(repository.findById(id))
                 .thenReturn(Optional.empty());
 
-        assertThrows(AccountNotFoundException.class, () -> service.update(id, request));
+        assertThrows(WorkspaceNotFoundException.class, () -> service.update(id, request));
 
         verify(repository).findById(id);
-        verify(repository, never()).save(any(Account.class));
+        verify(repository, never()).save(any(Workspace.class));
     }
 
     @Test
-    void deleteShouldRemoveAccount() {
+    void deleteShouldRemoveWorkspace() {
 
         UUID id = UUID.randomUUID();
 
-        Account account = new Account();
-        account.setId(id);
-        account.setName("Igor");
-        account.setCreatedAt(Instant.now());
+        Workspace workspace = new Workspace();
+        workspace.setId(id);
+        workspace.setName("Igor");
+        workspace.setCreatedAt(Instant.now());
 
         when(repository.findById(id))
-                .thenReturn(Optional.of(account));
+                .thenReturn(Optional.of(workspace));
 
         service.delete(id);
 
         verify(repository).findById(id);
-        verify(repository).delete(account);
+        verify(repository).delete(workspace);
     }
 
     @Test
-    void deleteShouldThrowExceptionWhenAccountDoesNotExist() {
+    void deleteShouldThrowExceptionWhenWorkspaceDoesNotExist() {
 
         UUID id = UUID.randomUUID();
 
         when(repository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(AccountNotFoundException.class,
+        assertThrows(WorkspaceNotFoundException.class,
                 () -> service.delete(id));
 
         verify(repository).findById(id);
-        verify(repository, never()).delete(any(Account.class));
+        verify(repository, never()).delete(any(Workspace.class));
     }
 
     @Test
-    void getAllShouldReturnAccounts() {
+    void getAllShouldReturnWorkspaces() {
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        Account account1 = new Account();
-        account1.setId(UUID.randomUUID());
-        account1.setName("User1");
-        account1.setCreatedAt(Instant.now());
+        Workspace workspace1 = new Workspace();
+        workspace1.setId(UUID.randomUUID());
+        workspace1.setName("User1");
+        workspace1.setCreatedAt(Instant.now());
 
-        Account account2 = new Account();
-        account2.setId(UUID.randomUUID());
-        account2.setName("User2");
-        account2.setCreatedAt(Instant.now());
+        Workspace workspace2 = new Workspace();
+        workspace2.setId(UUID.randomUUID());
+        workspace2.setName("User2");
+        workspace2.setCreatedAt(Instant.now());
 
-        Page<Account> page = new PageImpl<>(List.of(account1, account2));
+        Page<Workspace> page = new PageImpl<>(List.of(workspace1, workspace2));
 
         when(repository.findAll(pageable))
                 .thenReturn(page);
 
-        Page<Account> result = service.getAll(null, pageable);
+        Page<Workspace> result = service.getAll(null, pageable);
 
         assertEquals(2, result.getContent().size());
         assertEquals("User1", result.getContent().get(0).getName());

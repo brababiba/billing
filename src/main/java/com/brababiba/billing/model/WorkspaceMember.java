@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "account_members")
-public class AccountMember {
+@Table(name = "workspace_members")
+public class WorkspaceMember {
 
     @EmbeddedId
-    private AccountMemberId id;
+    private WorkspaceMemberId id;
 
     @Column(name = "role", nullable = false)
     private String role;

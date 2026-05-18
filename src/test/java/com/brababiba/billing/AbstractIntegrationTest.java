@@ -1,9 +1,9 @@
 package com.brababiba.billing;
 
-import com.brababiba.billing.repository.AccountMemberRepository;
-import com.brababiba.billing.repository.AccountRepository;
 import com.brababiba.billing.repository.UserRepository;
 import com.brababiba.billing.repository.UserRoleRepository;
+import com.brababiba.billing.repository.WorkspaceMemberRepository;
+import com.brababiba.billing.repository.WorkspaceRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -25,10 +25,10 @@ public abstract class AbstractIntegrationTest {
     protected UserRoleRepository userRoleRepository;
 
     @Autowired
-    protected AccountRepository accountRepository;
+    protected WorkspaceRepository workspaceRepository;
 
     @Autowired
-    protected AccountMemberRepository accountMemberRepository;
+    protected WorkspaceMemberRepository workspaceMemberRepository;
 
     protected String loginAndGetToken(String email, String password) throws Exception {
 
