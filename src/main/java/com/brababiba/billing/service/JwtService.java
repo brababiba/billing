@@ -1,8 +1,6 @@
 package com.brababiba.billing.service;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -11,7 +9,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final SecretKey secretKey = Jwts.SIG.HS256.key().build();
 
     public String generateToken(String email) {
         return Jwts.builder()

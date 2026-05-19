@@ -47,7 +47,7 @@ External payment systems such as Stripe, PayPal, Paddle, or others may be used l
 Implemented:
 
 - user registration
-- password hashing with BCrypt
+- password hashing with Bcrypt
 - login
 - JWT generation
 - JWT validation
@@ -66,7 +66,7 @@ Current roles:
 
 ## 4. Current Database Model
 
-## Tenant and Account Model
+## Workspace and Tenant Model
 
 ### User
 
@@ -85,7 +85,7 @@ These roles are system-wide roles.
 
 ---
 
-### Account
+### Workspace
 
 An `Account` represents a tenant, company, workspace, or organization.
 
@@ -96,15 +96,15 @@ Billing entities such as:
 - usage
 - entitlements
 
-will eventually belong to accounts rather than directly to users.
+will eventually belong to workspaces rather than directly to users.
 
 ---
 
-### Account Membership
+### Workspace Membership
 
-Users are connected to accounts through `account_members`.
+Users are connected to workspaces through `workspace_members`.
 
-This allows the same user to belong to multiple accounts.
+This allows the same user to belong to multiple workspaces.
 
 Example:
 
@@ -113,9 +113,9 @@ Example:
 
 ---
 
-### Account Roles
+### Workspace Roles
 
-Account roles are tenant-scoped roles.
+Workspace roles are tenant-scoped roles.
 
 Planned workspace roles:
 
@@ -158,7 +158,7 @@ The platform follows a hybrid onboarding model.
 When a user registers normally:
 
 1. a new user is created
-2. a default personal workspace/workspace is created
+2. a default personal workspace is created
 3. the user becomes the OWNER of that workspace
 
 Goal:
@@ -183,6 +183,23 @@ In invitation-based flows, automatic personal workspace creation may be skipped.
 
 #### Architectural Reasoning
 
+### Current Workspace Implementation
+
+Currently implemented workspace features:
+
+- automatic workspace creation during registration
+- automatic OWNER role assignment for registering user
+- workspace membership model
+- authenticated "Get My Workspaces" endpoint
+- workspace-scoped membership retrieval
+
+Current onboarding flow:
+
+1. user registers
+2. personal workspace is created automatically
+3. user becomes OWNER of the workspace
+
+
 This hybrid model combines:
 
 - simple SaaS onboarding
@@ -195,17 +212,17 @@ while avoiding unnecessary onboarding friction.
 
 Expected future entities:
 
-### tenants / accounts
+### workspaces
 
 Represents a company, workspace, customer workspace, or tenant.
 
-### account_members
+### workspace_members
 
-Connects users to accounts.
+Connects users to workspaces.
 
 Possible fields:
 
-- `account_id`
+- `workspace_id`
 - `user_id`
 - `role`
 - `created_at`
@@ -245,7 +262,7 @@ Defines which features are included in each plan.
 
 ### subscriptions
 
-Represents active billing state for an workspace.
+Represents active billing state for a workspace.
 
 Possible statuses:
 
@@ -272,7 +289,7 @@ Stores pre-calculated usage totals per billing period.
 
 ### entitlements
 
-Represents what an workspace/user is allowed to do.
+Represents what a workspace/user is allowed to do.
 
 Example API:
 
@@ -302,9 +319,10 @@ Represents external systems such as Stripe, PayPal, Paddle, etc.
 webhook_events
 Stores external provider webhook events for idempotency and audit.
 
-6. Architectural Principles
-   Code is the source of truth
-   The project should remain understandable from:
+## 6. Architectural Principles
+
+Code is the source of truth
+The project should remain understandable from:
 
 code structure
 package names
@@ -334,9 +352,10 @@ usage limits
 payments
 webhook idempotency
 
-7. Current Known Architectural Decisions
-   JWT is used for authentication
-   JWT is currently implemented directly inside the application for learning and MVP purposes.
+## 7. Current Known Architectural Decisions
+
+JWT is used for authentication
+JWT is currently implemented directly inside the application for learning and MVP purposes.
 
 Future option:
 

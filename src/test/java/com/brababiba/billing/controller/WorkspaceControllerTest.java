@@ -305,6 +305,23 @@ public class WorkspaceControllerTest extends AbstractIntegrationTest {
                         .value(ErrorMessages.INVALID_REQUEST_PARAMETER));
     }
 
+    @Test
+    void getMyWorkspaceShouldReturnUserWorkspaces() throws Exception {
+
+        String email = "workspace-user-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(email, password);
+
+        String token = loginAndGetToken(email, password);
+
+        mockMvc.perform(get("/api/workspaces/my")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].role").value("OWNER"));
+    }
+
     @NonNull
     private static String createWorkspaceBody(String name) {
         return """
