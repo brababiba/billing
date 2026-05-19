@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember, WorkspaceMemberId> {
 
     List<WorkspaceMember> findByIdUserId(UUID userId);
+
+    boolean existsByIdWorkspaceIdAndIdUserId(UUID workspaceId, UUID userId);
 }

@@ -2,6 +2,7 @@ package com.brababiba.billing.service;
 
 import com.brababiba.billing.dto.MyWorkspaceResponse;
 import com.brababiba.billing.dto.UpdateWorkspaceRequest;
+import com.brababiba.billing.dto.WorkspaceResponse;
 import com.brababiba.billing.exception.WorkspaceNotFoundException;
 import com.brababiba.billing.model.User;
 import com.brababiba.billing.model.Workspace;
@@ -22,14 +23,19 @@ public class WorkspaceService {
     private final WorkspaceRepository repository;
 
     private final WorkspaceMemberRepository workspaceMemberRepository;
+
     private final UserRepository userRepository;
 
-    public WorkspaceService(WorkspaceRepository repository, WorkspaceMemberRepository workspaceMemberRepository, UserRepository userRepository) {
+    private final WorkspaceRepository workspaceRepository;
+
+    public WorkspaceService(WorkspaceRepository repository, WorkspaceMemberRepository workspaceMemberRepository,
+                            WorkspaceRepository workspaceRepository, UserRepository userRepository) {
 
         this.repository = repository;
 
         this.workspaceMemberRepository = workspaceMemberRepository;
         this.userRepository = userRepository;
+        this.workspaceRepository = workspaceRepository;
     }
 
     public Workspace create(String name) {
@@ -50,19 +56,28 @@ public class WorkspaceService {
         return repository.findByNameContainingIgnoreCase(name, pageable);
     }
 
-    public Workspace getById(UUID id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new WorkspaceNotFoundException("Workspace not found: " + id));
+    public WorkspaceResponse getById(UUID id) {
+
+        Workspace workspace = findById(id);
+        return WorkspaceResponse.from(workspace);
+    }
+
+    public WorkspaceResponse getById(UUID id, String userEmail) {
+        validateWorkspaceAccess(id, userEmail);
+
+        Workspace workspace = findById(id);
+
+        return WorkspaceResponse.from(workspace);
     }
 
     public Workspace update(UUID id, UpdateWorkspaceRequest request) {
-        Workspace workspace = getById(id);
+        Workspace workspace = findById(id);
         workspace.setName(request.getName());
         return repository.save(workspace);
     }
 
     public void delete(UUID id) {
-        Workspace workspace = getById(id);
+        Workspace workspace = findById(id);
         repository.delete(workspace);
     }
 
@@ -70,7 +85,7 @@ public class WorkspaceService {
         return workspaceMemberRepository.findByIdUserId(userId)
                 .stream()
                 .map(member -> {
-                    Workspace workspace = getById(member.getId().getWorkspaceId());
+                    Workspace workspace = findById(member.getId().getWorkspaceId());
 
                     return new MyWorkspaceResponse(
                             workspace.getId().toString(),
@@ -87,5 +102,23 @@ public class WorkspaceService {
                 .orElseThrow();
 
         return getMyWorkspaces(user.getId());
+    }
+
+    private void validateWorkspaceAccess(UUID workspaceId, String userEmail) {
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow();
+
+        boolean hasAccess = workspaceMemberRepository.existsByIdWorkspaceIdAndIdUserId(workspaceId, user.getId());
+
+        if (!hasAccess) {
+            throw new WorkspaceNotFoundException(workspaceId.toString());
+        }
+    }
+
+    private Workspace findById(UUID id) {
+
+        return workspaceRepository.findById(id)
+                .orElseThrow(() -> new WorkspaceNotFoundException(id.toString()));
     }
 }

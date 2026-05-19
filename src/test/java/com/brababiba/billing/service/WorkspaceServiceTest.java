@@ -1,6 +1,7 @@
 package com.brababiba.billing.service;
 
 import com.brababiba.billing.dto.UpdateWorkspaceRequest;
+import com.brababiba.billing.dto.WorkspaceResponse;
 import com.brababiba.billing.exception.WorkspaceNotFoundException;
 import com.brababiba.billing.model.Workspace;
 import com.brababiba.billing.repository.WorkspaceRepository;
@@ -72,11 +73,11 @@ public class WorkspaceServiceTest {
         when(repository.findById(id))
                 .thenReturn(Optional.of(workspace));
 
-        Workspace result = service.getById(id);
+        WorkspaceResponse result = service.getById(id);
 
-        assertEquals(id, result.getId());
-        assertEquals("Igor", result.getName());
-        assertNotNull(result.getCreatedAt());
+        assertEquals(id.toString(), result.id());
+        assertEquals("Igor", result.name());
+        assertNotNull(result.createdAt());
 
         verify(repository).findById(id);
     }

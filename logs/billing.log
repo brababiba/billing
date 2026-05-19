@@ -1,1 +1,0 @@
-2026-05-19T00:18:01.363+03:00  WARN 21852 --- [billing] [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase          : HikariPool-1 - Failed to validate connection org.postgresql.jdbc.PgConnection@3601252d (This connection has been closed.). Possibly consider using a shorter maxLifetime value.

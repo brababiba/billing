@@ -92,18 +92,23 @@ public class WorkspaceControllerTest extends AbstractIntegrationTest {
     @Test
     void updateWorkspacesShouldChangeName() throws Exception {
 
-        String id = createWorkspaceAndReturnId("OldName");
+        String email = "workspace-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(email, password);
+        String token = loginAndGetToken(email, password);
+        String workspaceId = getFirstMyWorkspaceId(token);
 
         String updateBody = createWorkspaceBody("NewName");
 
-        mockMvc.perform(put("/api/workspaces/" + id)
+        mockMvc.perform(put("/api/workspaces/" + workspaceId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateBody)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("NewName"));
 
-        mockMvc.perform(get("/api/workspaces/" + id)
+        mockMvc.perform(get("/api/workspaces/" + workspaceId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("NewName"));
@@ -149,13 +154,18 @@ public class WorkspaceControllerTest extends AbstractIntegrationTest {
     @Test
     void getByIdShouldReturnWorkspaceWhenExists() throws Exception {
 
-        String id = createWorkspaceAndReturnId("FindMe");
+        String email = "workspace-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
 
-        mockMvc.perform(get("/api/workspaces/" + id)
+        registerUser(email, password);
+        String token = loginAndGetToken(email, password);
+        String workspaceId = getFirstMyWorkspaceId(token);
+
+        mockMvc.perform(get("/api/workspaces/" + workspaceId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.name").value("FindMe"))
+                .andExpect(jsonPath("$.id").value(workspaceId))
+                .andExpect(jsonPath("$.name").value(expectedDefaultWorkspaceName(email)))
                 .andExpect(jsonPath("$.createdAt").exists());
     }
 
@@ -344,5 +354,21 @@ public class WorkspaceControllerTest extends AbstractIntegrationTest {
                 .getContentAsString();
 
         return JsonPath.read(createResponse, "$.id");
+    }
+
+    private String getFirstMyWorkspaceId(String token) throws Exception {
+
+        String response = mockMvc.perform(get("/api/workspaces/my")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return JsonPath.read(response, "$[0].id");
+    }
+
+    private String expectedDefaultWorkspaceName(String email) {
+        return email.split("@")[0] + "'s workspace";
     }
 }

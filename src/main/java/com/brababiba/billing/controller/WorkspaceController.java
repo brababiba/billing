@@ -40,9 +40,9 @@ public class WorkspaceController {
     }
 
     @GetMapping("/{id}")
-    public WorkspaceResponse getById(@PathVariable UUID id) {
-        Workspace workspace = workspaceService.getById(id);
-        return WorkspaceResponse.from(workspace);
+    public WorkspaceResponse getById(@PathVariable UUID id, Authentication authentication) {
+
+        return workspaceService.getById(id, authentication.getName());
     }
 
     @PutMapping("/{id}")
