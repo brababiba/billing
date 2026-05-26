@@ -46,15 +46,17 @@ public class WorkspaceController {
     }
 
     @PutMapping("/{id}")
-    public WorkspaceResponse update(@PathVariable UUID id, @RequestBody @Valid UpdateWorkspaceRequest request) {
-        Workspace workspace = workspaceService.update(id, request);
-        return WorkspaceResponse.from(workspace);
+    public WorkspaceResponse update(@PathVariable UUID id,
+                                    @RequestBody @Valid UpdateWorkspaceRequest request,
+                                    Authentication authentication) {
+        return workspaceService.update(id, request, authentication.getName());
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
-        workspaceService.delete(id);
+    public void delete(@PathVariable UUID id, Authentication authentication) {
+
+        workspaceService.delete(id, authentication.getName());
     }
 
     @GetMapping("/my")

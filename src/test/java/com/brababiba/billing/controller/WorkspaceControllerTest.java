@@ -71,14 +71,13 @@ public class WorkspaceControllerTest extends AbstractIntegrationTest {
     @Test
     void deleteWorkspaceShouldReturn204() throws Exception {
 
-        String createBody = createWorkspaceBody("toDelete");
+        String email = "delete-workspace-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
 
-        String response = mockMvc.perform(post("/api/workspaces")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createBody)
-                        .header("Authorization", "Bearer " + token))
-                .andReturn().getResponse().getContentAsString();
-        String id = JsonPath.read(response, "$.id");
+        registerUser(email, password);
+
+        String token = loginAndGetToken(email, password);
+        String id = getFirstMyWorkspaceId(token);
 
         mockMvc.perform(delete("/api/workspaces/" + id)
                         .header("Authorization", "Bearer " + token))

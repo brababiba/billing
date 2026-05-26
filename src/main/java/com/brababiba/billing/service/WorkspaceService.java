@@ -9,6 +9,9 @@ import com.brababiba.billing.model.Workspace;
 import com.brababiba.billing.repository.UserRepository;
 import com.brababiba.billing.repository.WorkspaceMemberRepository;
 import com.brababiba.billing.repository.WorkspaceRepository;
+import com.brababiba.billing.security.WorkspaceAuthorizationService;
+import com.brababiba.billing.security.WorkspacePermission;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,14 +31,17 @@ public class WorkspaceService {
 
     private final WorkspaceRepository workspaceRepository;
 
+    private final WorkspaceAuthorizationService workspaceAuthorizationService;
+
     public WorkspaceService(WorkspaceRepository repository, WorkspaceMemberRepository workspaceMemberRepository,
-                            WorkspaceRepository workspaceRepository, UserRepository userRepository) {
+                            WorkspaceRepository workspaceRepository, UserRepository userRepository, WorkspaceAuthorizationService workspaceAuthorizationService) {
 
         this.repository = repository;
 
         this.workspaceMemberRepository = workspaceMemberRepository;
         this.userRepository = userRepository;
         this.workspaceRepository = workspaceRepository;
+        this.workspaceAuthorizationService = workspaceAuthorizationService;
     }
 
     public Workspace create(String name) {
@@ -63,21 +69,47 @@ public class WorkspaceService {
     }
 
     public WorkspaceResponse getById(UUID id, String userEmail) {
-        validateWorkspaceAccess(id, userEmail);
+
+        workspaceAuthorizationService.requirePermission(
+                id,
+                userEmail,
+                WorkspacePermission.WORKSPACE_READ
+        );
 
         Workspace workspace = findById(id);
 
         return WorkspaceResponse.from(workspace);
     }
 
-    public Workspace update(UUID id, UpdateWorkspaceRequest request) {
+    public WorkspaceResponse update(UUID id, UpdateWorkspaceRequest request, String userEmail) {
+
+        workspaceAuthorizationService.requirePermission(
+                id,
+                userEmail,
+                WorkspacePermission.WORKSPACE_UPDATE
+        );
+
         Workspace workspace = findById(id);
+
         workspace.setName(request.getName());
-        return repository.save(workspace);
+
+        Workspace savedWorkspace = repository.save(workspace);
+        return WorkspaceResponse.from(savedWorkspace);
     }
 
-    public void delete(UUID id) {
+    @Transactional
+    public void delete(UUID id, String userEmail) {
+
+        workspaceAuthorizationService.requirePermission(
+                id,
+                userEmail,
+                WorkspacePermission.WORKSPACE_DELETE
+        );
+
         Workspace workspace = findById(id);
+
+        workspaceMemberRepository.deleteByIdWorkspaceId(id);
+
         repository.delete(workspace);
     }
 
@@ -102,18 +134,6 @@ public class WorkspaceService {
                 .orElseThrow();
 
         return getMyWorkspaces(user.getId());
-    }
-
-    private void validateWorkspaceAccess(UUID workspaceId, String userEmail) {
-
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow();
-
-        boolean hasAccess = workspaceMemberRepository.existsByIdWorkspaceIdAndIdUserId(workspaceId, user.getId());
-
-        if (!hasAccess) {
-            throw new WorkspaceNotFoundException(workspaceId.toString());
-        }
     }
 
     private Workspace findById(UUID id) {

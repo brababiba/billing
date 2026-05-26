@@ -4,7 +4,10 @@ import com.brababiba.billing.dto.UpdateWorkspaceRequest;
 import com.brababiba.billing.dto.WorkspaceResponse;
 import com.brababiba.billing.exception.WorkspaceNotFoundException;
 import com.brababiba.billing.model.Workspace;
+import com.brababiba.billing.repository.WorkspaceMemberRepository;
 import com.brababiba.billing.repository.WorkspaceRepository;
+import com.brababiba.billing.security.WorkspaceAuthorizationService;
+import com.brababiba.billing.security.WorkspacePermission;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +32,12 @@ public class WorkspaceServiceTest {
 
     @Mock
     private WorkspaceRepository repository;
+
+    @Mock
+    private WorkspaceAuthorizationService workspaceAuthorizationService;
+
+    @Mock
+    private WorkspaceMemberRepository workspaceMemberRepository;
 
     @InjectMocks
     private WorkspaceService service;
@@ -86,35 +95,43 @@ public class WorkspaceServiceTest {
     void updateShouldChangeWorkspaceName() {
 
         UUID id = UUID.randomUUID();
+        String userEmail = "owner@test.com";
 
         UpdateWorkspaceRequest request = new UpdateWorkspaceRequest();
         request.setName("NewName");
 
-        Workspace existingAcount = new Workspace();
-        existingAcount.setId(id);
-        existingAcount.setName("OldName");
-        existingAcount.setCreatedAt(Instant.now());
+        Workspace existingWorkspace = new Workspace();
+        existingWorkspace.setId(id);
+        existingWorkspace.setName("OldName");
+        existingWorkspace.setCreatedAt(Instant.now());
 
         when(repository.findById(id))
-                .thenReturn(Optional.of(existingAcount));
+                .thenReturn(Optional.of(existingWorkspace));
 
         when(repository.save(any(Workspace.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Workspace result = service.update(id, request);
+        WorkspaceResponse result = service.update(id, request, userEmail);
 
-        assertEquals(id, result.getId());
-        assertEquals("NewName", result.getName());
-        assertNotNull(result.getCreatedAt());
+        assertEquals(id.toString(), result.id());
+        assertEquals("NewName", result.name());
+        assertNotNull(result.createdAt());
+
+        verify(workspaceAuthorizationService).requirePermission(
+                id,
+                userEmail,
+                WorkspacePermission.WORKSPACE_UPDATE
+        );
 
         verify(repository).findById(id);
-        verify(repository).save(existingAcount);
+        verify(repository).save(existingWorkspace);
     }
 
     @Test
     void updateShouldThrowExceptionWhenWorkspaceDoesNotExist() {
 
         UUID id = UUID.randomUUID();
+        String userEmail = "owner@test.com";
 
         UpdateWorkspaceRequest request = new UpdateWorkspaceRequest();
         request.setName("NewName");
@@ -122,7 +139,13 @@ public class WorkspaceServiceTest {
         when(repository.findById(id))
                 .thenReturn(Optional.empty());
 
-        assertThrows(WorkspaceNotFoundException.class, () -> service.update(id, request));
+        assertThrows(WorkspaceNotFoundException.class, () -> service.update(id, request, userEmail));
+
+        verify(workspaceAuthorizationService).requirePermission(
+                id,
+                userEmail,
+                WorkspacePermission.WORKSPACE_UPDATE
+        );
 
         verify(repository).findById(id);
         verify(repository, never()).save(any(Workspace.class));
@@ -132,6 +155,7 @@ public class WorkspaceServiceTest {
     void deleteShouldRemoveWorkspace() {
 
         UUID id = UUID.randomUUID();
+        String userEmail = "owner@test.com";
 
         Workspace workspace = new Workspace();
         workspace.setId(id);
@@ -141,24 +165,39 @@ public class WorkspaceServiceTest {
         when(repository.findById(id))
                 .thenReturn(Optional.of(workspace));
 
-        service.delete(id);
+        service.delete(id, userEmail);
+
+        verify(workspaceAuthorizationService).requirePermission(
+                id,
+                userEmail,
+                WorkspacePermission.WORKSPACE_DELETE
+        );
 
         verify(repository).findById(id);
         verify(repository).delete(workspace);
+        verify(workspaceMemberRepository).deleteByIdWorkspaceId(id);
     }
 
     @Test
     void deleteShouldThrowExceptionWhenWorkspaceDoesNotExist() {
 
         UUID id = UUID.randomUUID();
+        String userEmail = "owner@test.com";
 
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(WorkspaceNotFoundException.class,
-                () -> service.delete(id));
+                () -> service.delete(id, userEmail));
+
+        verify(workspaceAuthorizationService).requirePermission(
+                id,
+                userEmail,
+                WorkspacePermission.WORKSPACE_DELETE
+        );
 
         verify(repository).findById(id);
         verify(repository, never()).delete(any(Workspace.class));
+        verify(workspaceMemberRepository, never()).deleteByIdWorkspaceId(id);
     }
 
     @Test
