@@ -2,6 +2,10 @@ package com.brababiba.billing.controller;
 
 import com.brababiba.billing.AbstractIntegrationTest;
 import com.brababiba.billing.common.ErrorMessages;
+import com.brababiba.billing.model.User;
+import com.brababiba.billing.model.WorkspaceMember;
+import com.brababiba.billing.model.WorkspaceMemberId;
+import com.brababiba.billing.security.WorkspaceRole;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +13,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -338,6 +345,92 @@ public class WorkspaceControllerTest extends AbstractIntegrationTest {
                     "name": "%s"
                 }
                 """.formatted(name);
+    }
+
+    @Test
+    void memberShouldNotUpdateWorkspace() throws Exception {
+
+        String ownerEmail = "owner-" + System.currentTimeMillis() + "@test.com";
+        String memberEmail = "member-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(ownerEmail, password);
+        String ownerToken = loginAndGetToken(ownerEmail, password);
+        String workspaceId = getFirstMyWorkspaceId(ownerToken);
+
+        registerUser(memberEmail, password);
+
+        addWorkspaceMember(workspaceId, memberEmail, WorkspaceRole.MEMBER);
+
+        String memberToken = loginAndGetToken(memberEmail, password);
+
+        String updateBody = createWorkspaceBody("HackedName");
+
+        mockMvc.perform(put("/api/workspaces/" + workspaceId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateBody)
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void memberShouldReadWorkspace() throws Exception {
+
+        String ownerEmail = "owner-read-" + System.currentTimeMillis() + "@test.com";
+        String memberEmail = "member-read-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(ownerEmail, password);
+        String ownerToken = loginAndGetToken(ownerEmail, password);
+        String workspaceId = getFirstMyWorkspaceId(ownerToken);
+
+        registerUser(memberEmail, password);
+
+        addWorkspaceMember(workspaceId, memberEmail, WorkspaceRole.MEMBER);
+
+        String memberToken = loginAndGetToken(memberEmail, password);
+
+        mockMvc.perform(get("/api/workspaces/" + workspaceId)
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(workspaceId));
+    }
+
+    @Test
+    void memberShouldNotDeleteWorkspace() throws Exception {
+
+        String ownerEmail = "owner-delete-" + System.currentTimeMillis() + "@test.com";
+        String memberEmail = "member-delete-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(ownerEmail, password);
+        String ownerToken = loginAndGetToken(ownerEmail, password);
+        String workspaceId = getFirstMyWorkspaceId(ownerToken);
+
+        registerUser(memberEmail, password);
+        addWorkspaceMember(workspaceId, memberEmail, WorkspaceRole.MEMBER);
+
+        String memberToken = loginAndGetToken(memberEmail, password);
+
+        mockMvc.perform(delete("/api/workspaces/" + workspaceId)
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isNotFound());
+    }
+
+    private void addWorkspaceMember(String workspaceId, String userEmail, WorkspaceRole role) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow();
+
+        WorkspaceMemberId memberId = new WorkspaceMemberId();
+        memberId.setWorkspaceId(UUID.fromString(workspaceId));
+        memberId.setUserId(user.getId());
+
+        WorkspaceMember member = new WorkspaceMember();
+        member.setId(memberId);
+        member.setRole(role.name());
+        member.setCreatedAt(LocalDateTime.now());
+
+        workspaceMemberRepository.save(member);
     }
 
     private String createWorkspaceAndReturnId(String name) throws Exception {
