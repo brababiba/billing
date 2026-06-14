@@ -2,6 +2,7 @@ package com.brababiba.billing.service;
 
 import com.brababiba.billing.dto.MyWorkspaceResponse;
 import com.brababiba.billing.dto.UpdateWorkspaceRequest;
+import com.brababiba.billing.dto.WorkspaceMemberResponse;
 import com.brababiba.billing.dto.WorkspaceResponse;
 import com.brababiba.billing.exception.WorkspaceNotFoundException;
 import com.brababiba.billing.model.User;
@@ -140,5 +141,22 @@ public class WorkspaceService {
 
         return workspaceRepository.findById(id)
                 .orElseThrow(() -> new WorkspaceNotFoundException(id.toString()));
+    }
+
+    public List<WorkspaceMemberResponse> getMembers(UUID workspaceId, String userEmail) {
+
+        workspaceAuthorizationService.requirePermission(workspaceId, userEmail, WorkspacePermission.WORKSPACE_READ);
+        return workspaceMemberRepository.findByIdWorkspaceId(workspaceId)
+                .stream()
+                .map(member -> {
+                    User user = userRepository.findById(member.getId().getUserId())
+                            .orElseThrow();
+
+                    return new WorkspaceMemberResponse(
+                            user.getId().toString(),
+                            user.getEmail(),
+                            member.getRole()
+                    );
+                }).toList();
     }
 }

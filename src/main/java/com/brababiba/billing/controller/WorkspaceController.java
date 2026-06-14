@@ -1,9 +1,6 @@
 package com.brababiba.billing.controller;
 
-import com.brababiba.billing.dto.CreateWorkspaceRequest;
-import com.brababiba.billing.dto.MyWorkspaceResponse;
-import com.brababiba.billing.dto.UpdateWorkspaceRequest;
-import com.brababiba.billing.dto.WorkspaceResponse;
+import com.brababiba.billing.dto.*;
 import com.brababiba.billing.model.Workspace;
 import com.brababiba.billing.service.WorkspaceService;
 import jakarta.validation.Valid;
@@ -67,5 +64,12 @@ public class WorkspaceController {
         String email = authentication.getName();
 
         return workspaceService.getMyWorkspaces(email);
+    }
+
+    @GetMapping("/{id}/members")
+    public List<WorkspaceMemberResponse> getMembers(
+            @PathVariable UUID id, Authentication authentication
+    ) {
+        return workspaceService.getMembers(id, authentication.getName());
     }
 }

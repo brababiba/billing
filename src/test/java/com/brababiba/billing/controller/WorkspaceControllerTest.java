@@ -417,6 +417,113 @@ public class WorkspaceControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void ownerShouldListWorkspaceMembers() throws Exception {
+
+        String email = "owner-members-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(email, password);
+        String token = loginAndGetToken(email, password);
+        String workspaceId = getFirstMyWorkspaceId(token);
+
+        mockMvc.perform(get("/api/workspaces/" + workspaceId + "/members")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].email").value(email))
+                .andExpect(jsonPath("$[0].role").value("OWNER"));
+    }
+
+    @Test
+    void memberShouldListWorkspaceMembers() throws Exception {
+
+        String ownerEmail = "owner-members+" + System.currentTimeMillis() + "@test.com";
+        String memberEmail = "member-members+" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(ownerEmail, password);
+
+        String ownerToken = loginAndGetToken(ownerEmail, password);
+        String workspaceId = getFirstMyWorkspaceId(ownerToken);
+
+        registerUser(memberEmail, password);
+
+        addWorkspaceMember(
+                workspaceId,
+                memberEmail,
+                WorkspaceRole.MEMBER
+        );
+
+        String memberToken = loginAndGetToken(memberEmail, password);
+
+        mockMvc.perform(get("/api/workspaces/" + workspaceId + "/members")
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void nonMemberShouldNotListWorkspaceMembers() throws Exception {
+
+        String ownerEmail = "owner-members+" + System.currentTimeMillis() + "@test.com";
+        String outsiderEmail = "outsider-members+" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(ownerEmail, password);
+
+        String ownerToken = loginAndGetToken(ownerEmail, password);
+        String workspaceId = getFirstMyWorkspaceId(ownerToken);
+
+        registerUser(outsiderEmail, password);
+
+        String outsiderToken = loginAndGetToken(outsiderEmail, password);
+
+        mockMvc.perform(get("/api/workspaces/" + workspaceId + "/members")
+                        .header("Authorization", "Bearer " + outsiderToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getWorkspaceMembersShouldReturn400WhenWorkspaceIdIsInvalid() throws Exception {
+
+        String email = "invalid-members-id-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(email, password);
+        String token = loginAndGetToken(email, password);
+
+        mockMvc.perform(get("/api/workspaces/not-a-guid/members")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getWorkspaceMembersShouldReturn404WhenWorkspaceDoesNotExist() throws Exception {
+
+        String email = "missing-members-workspace-" + System.currentTimeMillis() + "@test.com";
+        String password = "123456";
+
+        registerUser(email, password);
+        String token = loginAndGetToken(email, password);
+
+        UUID randomWorkspaceId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/workspaces/" + randomWorkspaceId + "/members")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getWorkspaceMembersWithoutTokenShouldReturnUnauthorized() throws Exception {
+
+        UUID workspaceId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/workspaces/" + workspaceId + "/members"))
+                .andExpect(status().isUnauthorized());
+    }
+
     private void addWorkspaceMember(String workspaceId, String userEmail, WorkspaceRole role) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow();
@@ -461,6 +568,7 @@ public class WorkspaceControllerTest extends AbstractIntegrationTest {
     }
 
     private String expectedDefaultWorkspaceName(String email) {
+
         return email.split("@")[0] + "'s workspace";
     }
 }
